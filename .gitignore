@@ -1,0 +1,10 @@
+.venv/
+.gradio/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+outputs/
+data/
+*.log
