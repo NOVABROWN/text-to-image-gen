@@ -318,7 +318,11 @@ class ImageGenerationPipeline:
         """Generate image using Stable Diffusion."""
         
         if not self.sd_model:
-            return None, {"error": "Stable Diffusion model not loaded"}
+            print("Stable Diffusion not initialized yet. Attempting on-demand load...")
+            self._load_stable_diffusion()
+            
+        if not self.sd_model:
+            return None, {"error": "Stable Diffusion model could not be loaded"}
         
         try:
             if seed is None:
