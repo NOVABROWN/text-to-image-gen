@@ -64,7 +64,7 @@ Key file: prompt_encoder.py
 - Look at SBU Captions stats and diversity
 - Generate charts and sample galleries
 
-Key file: task4_explore.py
+Key file: explore.py
 
 ### Attention-Enhanced GAN
 
@@ -72,7 +72,7 @@ Key file: task4_explore.py
 - Improve spatial focus and text-conditioned image generation
 - Produce cleaner and more stable images than a basic CGAN
 
-Key file: task5_attention_gan.py
+Key file: attention_gan.py
 
 ### End-to-End Pipeline
 
@@ -81,7 +81,7 @@ Key file: task5_attention_gan.py
 - Process single prompts or batches
 - Save generated outputs and metadata automatically
 
-Key file: task6_pipeline.py
+Key file: pipeline.py
 
 ---
 
@@ -115,7 +115,7 @@ text-to-image-gen/
 ├── explore.py                      # Dataset exploration and visualization
 ├── attention_gan.py                # Attention-enhanced GAN
 ├── pipeline.py                     # End-to-end generation pipeline
-├── complete_internship_tasks.ipynb # Full Colab notebook for all tasks
+├── text_to_image_generation_complete.ipynb  # Full self-contained notebook for all tasks
 ├── README.md                       # Project documentation
 ├── outputs/                        # Generated images and experiment outputs
 └── data/                           # Dataset folders
@@ -127,7 +127,7 @@ text-to-image-gen/
 
 ### Option 1: Google Colab (Recommended)
 
-1. Open complete_internship_tasks.ipynb in Colab
+1. Open `text_to_image_generation_complete.ipynb` in Colab
 2. Run the cells in order
 3. Let the notebook complete all tasks and launch the Gradio interface
 
@@ -173,7 +173,7 @@ image.save("output.png")
 ### Attention GAN Training
 
 ```python
-from task5_attention_gan import AttentionGANModel
+from attention_gan import AttentionGANModel
 
 model = AttentionGANModel()
 history = model.train(num_epochs=50)
@@ -184,7 +184,7 @@ image.save("sample.png")
 ### Full Pipeline
 
 ```python
-from task6_pipeline import ImageGenerationPipeline
+from pipeline import ImageGenerationPipeline
 
 pipeline = ImageGenerationPipeline()
 result = pipeline.analyze_and_generate(

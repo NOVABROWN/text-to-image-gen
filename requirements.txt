@@ -1,0 +1,42 @@
+# ============================================================
+# Text-to-Image Generation Platform — Python Dependencies
+# ============================================================
+# Install with:
+#   pip install -r requirements.txt
+#
+# For GPU (CUDA 12.1):
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# ============================================================
+
+# Core deep learning
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Stable Diffusion / Diffusion models
+diffusers>=0.24.0
+accelerate>=0.24.0
+transformers>=4.36.0
+safetensors>=0.4.0
+
+# LoRA / Parameter-Efficient Fine-Tuning
+peft>=0.7.0
+
+# Dataset loading (Task 4 — Oxford Flowers, SBU Captions)
+datasets>=2.16.0
+
+# Gradio UI
+gradio>=4.0.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Numerical / scientific
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Visualization (Task 4 charts, loss curves)
+matplotlib>=3.7.0
+
+# Optional: 8-bit optimizer (saves VRAM during LoRA fine-tuning)
+# bitsandbytes>=0.41.0   # Uncomment if on Linux/CUDA; Windows support is limited

@@ -403,14 +403,14 @@ class AttentionGANModel:
         
         return data, labels
     
-    def train(self, num_epochs: int = 50, batch_size: int = 64, learning_rate: float = 0.0002) -> Dict:
+    def train(self, num_epochs: int = 50, batch_size: int = 64, learning_rate: float = 0.0002, n_samples: int = 4000) -> Dict:
         """Train the attention-enhanced GAN."""
         
         print(f"Training Attention-Enhanced GAN for {num_epochs} epochs...")
-        print(f"Device: {self.device} | LR: {learning_rate} | Batch: {batch_size}")
+        print(f"Device: {self.device} | LR: {learning_rate} | Batch: {batch_size} | Samples: {n_samples}")
         
         # Create dataset
-        data, labels = self._create_synthetic_dataset(4000)
+        data, labels = self._create_synthetic_dataset(n_samples)
         dataset = torch.utils.data.TensorDataset(
             torch.stack(data),
             torch.tensor(labels, dtype=torch.long)

@@ -1,12 +1,13 @@
 # ==============================================================================
-# Text-to-Image Generation Platform - Standalone Unified Entry Point
+# Text-to-Image Generation Platform - Unified Interactive UI Dashboard
 # ==============================================================================
-# This script integrates:
-#   1. Stable Diffusion Image Generation (with switchable schedulers)
-#   2. LoRA Fine-Tuning on custom datasets (with caption & loss tracking)
-#   3. Conditional GAN Shape Generation (from scratch)
-#   4. HuggingFace CLIP Prompt Encoder & Inspector
-#   5. Reproducible experiments (CGAN, Scheduler, CFG Ablation)
+# This script integrates all 6 internship tasks:
+#   Task 1. LoRA Fine-Tuning of Stable Diffusion on custom datasets
+#   Task 2. Conditional GAN (CGAN) for shape generation from text labels
+#   Task 3. HuggingFace CLIP Prompt Encoder & token/embedding inspector
+#   Task 4. Dataset Explorer - Oxford-102 Flowers analysis & visualization
+#   Task 5. Attention-Enhanced GAN (self-attention + cross-attention)
+#   Task 6. End-to-end Text-to-Image Pipeline (via pipeline.py)
 #
 # Run this file with: python app.py
 # ==============================================================================
@@ -57,7 +58,6 @@ from diffusers import (
 )
 import gradio as gr
 
-# CELL 3: Core Generator Class - Part 1 (Initialization)
 class StableDiffusionGenerator:    
     def __init__(self, model_id: str = "runwayml/stable-diffusion-v1-5", device: str = "auto"):
         try:
@@ -81,7 +81,6 @@ class StableDiffusionGenerator:
             print(f"Initialization Error: {str(e)}")
             raise
 
-# CELL 4: Core Generator Class - Part 2 (Setup Methods)
     def _setup_device(self, device: str) -> torch.device:
         if device == "auto":
             if torch.cuda.is_available():
@@ -125,7 +124,6 @@ class StableDiffusionGenerator:
         except Exception as e:
             raise RuntimeError(f"Failed to load model: {e}")
 
-# CELL 5: Core Generator Class - Part 3 (Scheduler & Generation)
     def set_scheduler(self, scheduler_name: str) -> bool:
         if scheduler_name not in self.schedulers:
             print(f"Unknown scheduler: {scheduler_name}")
@@ -151,7 +149,6 @@ class StableDiffusionGenerator:
             print(f"Scheduler Error: {e}")
             return False
 
-# CELL 6: Core Generator Class - Part 4 (Image Generation)
     def load_lora_weights(self, lora_name: str):
         if not hasattr(self, 'pipe') or self.pipe is None:
             return "Model not loaded"
@@ -245,7 +242,6 @@ class StableDiffusionGenerator:
         finally:
             self._cleanup_memory()
 
-# CELL 7: Core Generator Class - Part 5 (Utility Methods)
     def _cleanup_memory(self):
         gc.collect()
         if self.device.type == "cuda":
@@ -280,7 +276,6 @@ class StableDiffusionGenerator:
         print(f"Saved: {filepath}")
         return filepath
 
-# CELL 8: UI Class - Part 1 (Initialization & Generator Setup)
 class StableDiffusionUI:
     def __init__(self):
         self.generator = None
@@ -310,7 +305,6 @@ class StableDiffusionUI:
         except Exception as e:
             return f"Initialization failed: {str(e)}"
 
-# CELL 9: UI Class - Part 2 (Image Generation Handler)
     def generate_image(
         self,
         prompt: str,
@@ -357,7 +351,6 @@ class StableDiffusionUI:
         except Exception as e:
             return None, f"Generation failed: {str(e)}", ""
 
-# CELL 10: UI Class - Part 3 (Helper Methods)
     def get_available_loras(self):
         lora_dir = "lora_output"
         if not os.path.exists(lora_dir):
@@ -535,103 +528,50 @@ GPU Memory Usage:
         except Exception as e:
             return None, f"Error: {e}"
 
-# CELL 11: UI Class - Part 4 (Interface Creation)
-
-    def run_exp1(self, epochs):
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        import os
+    # ------------------------------------------------------------------
+    # Task 4 — Dataset Explorer
+    # ------------------------------------------------------------------
+    def run_dataset_explorer(self):
+        """Load pre-generated Task 4 charts, or re-run explore.py if missing."""
+        import subprocess, sys
         from PIL import Image as PILImage
-        os.makedirs("outputs/experiments", exist_ok=True)
-        yield "Training CGAN...", None, None
+
+        task4_dir = os.path.join("outputs", "task4")
+        expected = [
+            "task4_flowers_class_dist.png",
+            "task4_flowers_gallery.png",
+            "task4_flickr_stats.png",
+            "task4_dashboard.png",
+        ]
+
+        # Check if charts already exist
+        missing = [f for f in expected if not os.path.isfile(os.path.join(task4_dir, f))]
+        if missing:
+            status = "Charts not found — running explore.py to generate them (may take ~30 seconds)..."
+            yield status, None, None, None, None
+            try:
+                result = subprocess.run(
+                    [sys.executable, "explore.py"],
+                    capture_output=True, text=True, timeout=120
+                )
+                if result.returncode != 0:
+                    yield f"explore.py error:\n{result.stderr[-500:]}", None, None, None, None
+                    return
+            except Exception as e:
+                yield f"Failed to run explore.py: {e}", None, None, None, None
+                return
+
         try:
-            model = self.get_cgan_model()
-            history = model.train(num_epochs=int(epochs))
-            fig, ax = plt.subplots(figsize=(8,4))
-            ax.plot(history["epochs"], history["g_losses"], label="G Loss", color="#4C9BE8", linewidth=2)
-            ax.plot(history["epochs"], history["d_losses"], label="D Loss", color="#E84C4C", linewidth=2)
-            ax.set_title("CGAN Loss Curves"); ax.legend(); ax.grid(True, alpha=0.3)
-            fig.tight_layout()
-            lp = "outputs/experiments/cgan_loss_curves.png"
-            fig.savefig(lp, dpi=120, bbox_inches="tight"); plt.close(fig)
-            grid = model.generate_grid(n_per_class=5, upscale=4)
-            gp = "outputs/experiments/cgan_shape_grid.png"; grid.save(gp)
-            yield (f"? Done! G:{history['g_losses'][-1]:.4f} D:{history['d_losses'][-1]:.4f}\n"
-                   f"Saved: {lp}, {gp}"), PILImage.open(lp), grid
+            imgs = [PILImage.open(os.path.join(task4_dir, f)) for f in expected]
+            status = (
+                "Task 4 — Oxford-102 Flowers Dataset\n"
+                "102 classes | 1,020 training images | 128x128 px (uniform)\n"
+                "Caption analysis: mean 12.9 words | std 1.9 | range 9-17 words\n"
+                "All charts generated and saved to outputs/task4/"
+            )
+            yield status, imgs[0], imgs[1], imgs[2], imgs[3]
         except Exception as e:
-            yield f"Error: {e}", None, None
-
-    def run_exp2(self):
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt, time, os
-        from PIL import Image as PILImage
-        os.makedirs("outputs/experiments", exist_ok=True)
-        if self.generator is None:
-            yield "Initialize SD model first!", None, None; return
-        SCHEDULERS = ["euler_a","euler","ddim","dpm_solver","lms"]
-        LABELS = {"euler_a":"Euler-A","euler":"Euler","ddim":"DDIM","dpm_solver":"DPM Solver","lms":"LMS"}
-        PROMPT = "a futuristic city skyline at dusk, neon lights, highly detailed, photorealistic"
-        results = {}
-        for s in SCHEDULERS:
-            yield f"Testing {s}...", None, None
-            try:
-                t0 = time.time()
-                img, _ = self.generator.generate_image(PROMPT,"blurry,low quality",512,512,20,7.5,42,s)
-                results[s] = {"time":time.time()-t0,"image":img}
-            except Exception as e:
-                results[s] = {"time":None,"image":None}
-        valid = {k:v for k,v in results.items() if v["time"]}
-        times = [v["time"] for v in valid.values()]
-        labels = [LABELS.get(k,k) for k in valid]
-        colors = ["#4C9BE8","#5EBA7D","#E8A44C","#E84C4C","#9B4CE8"][:len(valid)]
-        fig, ax = plt.subplots(figsize=(9,4))
-        bars = ax.bar(labels, times, color=colors, width=0.6)
-        ax.bar_label(bars, labels=[f"{t:.1f}s" for t in times], padding=4)
-        ax.set_title("Scheduler Inference Time Comparison"); ax.set_ylabel("Seconds")
-        ax.grid(axis="y", alpha=0.3); fig.tight_layout()
-        bp = "outputs/experiments/scheduler_benchmark_times.png"
-        fig.savefig(bp, dpi=120, bbox_inches="tight"); plt.close(fig)
-        n = len(valid)
-        fig2, axes = plt.subplots(1,n,figsize=(4*n,4))
-        if n==1: axes=[axes]
-        for ax2,(s,r) in zip(axes,valid.items()):
-            ax2.imshow(r["image"]); ax2.set_title(f"{LABELS.get(s,s)}\n{r['time']:.1f}s"); ax2.axis("off")
-        fig2.tight_layout(); gp = "outputs/experiments/scheduler_image_grid.png"
-        fig2.savefig(gp, dpi=100, bbox_inches="tight"); plt.close(fig2)
-        fastest = min(valid, key=lambda k:valid[k]["time"])
-        yield f"? Done! Fastest: {fastest} ({valid[fastest]['time']:.1f}s)", PILImage.open(bp), PILImage.open(gp)
-
-    def run_exp3(self):
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt, os
-        from PIL import Image as PILImage
-        os.makedirs("outputs/experiments", exist_ok=True)
-        if self.generator is None:
-            yield "Initialize SD model first!", None; return
-        CFG_VALUES = [1,3,5,7,10,15,20]
-        PROMPT = "a majestic lion in a golden savannah, dramatic lighting, ultra detailed, 4k"
-        NEG = "blurry, low quality, cartoon, ugly"
-        imgs = {}
-        for cfg in CFG_VALUES:
-            yield f"Generating CFG={cfg}...", None
-            try:
-                img, _ = self.generator.generate_image(PROMPT,NEG,512,512,25,cfg,1337,"euler_a")
-                imgs[cfg] = img
-            except Exception as e:
-                pass
-        n = len(imgs)
-        ql = {1:"Noisy",3:"Creative",5:"Balanced",7:"Recommended",10:"Prompt-heavy",15:"Over-sat.",20:"Artefacts"}
-        fig, axes = plt.subplots(1,n,figsize=(3.5*n,4.5))
-        if n==1: axes=[axes]
-        for ax,(v,img) in zip(axes,imgs.items()):
-            ax.imshow(img); ax.set_title(f"CFG={v}\n{ql.get(v,'')}",fontsize=9); ax.axis("off")
-        fig.suptitle(f'CFG Ablation | Seed=1337 | Steps=25',fontsize=11,fontweight="bold")
-        fig.tight_layout(); gp = "outputs/experiments/cfg_ablation_grid.png"
-        fig.savefig(gp, dpi=110, bbox_inches="tight"); plt.close(fig)
-        yield "? CFG ablation complete!", PILImage.open(gp)
+            yield f"Error loading charts: {e}", None, None, None, None
 
 
     def _get_prompt_encoder(self):
@@ -827,6 +767,22 @@ GPU Memory Usage:
                 with gr.Row():
                     cgan_loss_image = gr.Image(label="Training Loss Curves", type="pil")
             
+            with gr.Tab("Dataset Explorer"):
+                gr.Markdown("### Task 4 — Oxford-102 Flowers Dataset Exploration")
+                gr.Markdown(
+                    "Loads the Oxford-102 Flowers dataset (102 classes, 8189 images), "
+                    "analyzes class distribution and caption statistics, and displays "
+                    "visualizations. Charts are pre-generated in `outputs/task4/`."
+                )
+                explore_btn = gr.Button("Load Dataset Visualizations", variant="primary")
+                explore_status = gr.Textbox(label="Dataset Statistics", lines=5, interactive=False)
+                with gr.Row():
+                    explore_img1 = gr.Image(label="Class Distribution (Bar Chart)", type="pil")
+                    explore_img2 = gr.Image(label="Image Gallery with Labels", type="pil")
+                with gr.Row():
+                    explore_img3 = gr.Image(label="Caption Length Statistics", type="pil")
+                    explore_img4 = gr.Image(label="Summary Dashboard", type="pil")
+
             with gr.Tab("Learning Resources"):
                 gr.Markdown("""
                 ## Understanding Stable Diffusion
@@ -864,28 +820,6 @@ GPU Memory Usage:
                 )
             
 
-            with gr.Tab("? Experiments"):
-                gr.Markdown("### Reproducible Internship Experiments")
-                gr.Markdown("Run each experiment directly from the UI. Outputs saved to `outputs/experiments/`.")
-                with gr.Tab("Exp 1 ? CGAN Analytics"):
-                    exp1_epochs = gr.Slider(10, 100, 50, step=10, label="Epochs")
-                    exp1_btn = gr.Button("Run CGAN Experiment", variant="primary")
-                    exp1_status = gr.Textbox(label="Status", lines=3)
-                    with gr.Row():
-                        exp1_loss = gr.Image(label="Loss Curves")
-                        exp1_grid = gr.Image(label="Shape Grid")
-                with gr.Tab("Exp 2 ? Scheduler Benchmark"):
-                    gr.Markdown("Requires SD model initialized in Setup tab.")
-                    exp2_btn = gr.Button("Run Scheduler Benchmark", variant="primary")
-                    exp2_status = gr.Textbox(label="Status", lines=3)
-                    with gr.Row():
-                        exp2_chart = gr.Image(label="Time Bar Chart")
-                        exp2_grid = gr.Image(label="Image Grid")
-                with gr.Tab("Exp 3 ? CFG Ablation"):
-                    gr.Markdown("Requires SD model initialized in Setup tab.")
-                    exp3_btn = gr.Button("Run CFG Ablation", variant="primary")
-                    exp3_status = gr.Textbox(label="Status", lines=3)
-                    exp3_grid = gr.Image(label="CFG Grid")
 
 
             with gr.Tab("Prompt Encoder"):
@@ -968,27 +902,36 @@ GPU Memory Usage:
                 outputs=[cgan_grid_image, cgan_gen_status]
             )
         
-
-            exp1_btn.click(fn=self.run_exp1, inputs=exp1_epochs,
-                outputs=[exp1_status, exp1_loss, exp1_grid])
-            exp2_btn.click(fn=self.run_exp2, outputs=[exp2_status, exp2_chart, exp2_grid])
-            exp3_btn.click(fn=self.run_exp3, outputs=[exp3_status, exp3_grid])
-        
             pe_btn.click(fn=self.pe_encode_ui, inputs=pe_input,
                 outputs=[pe_table, pe_stats, pe_pooled])
             pe_cb.click(fn=self.pe_compare_ui, inputs=[pe_a, pe_b], outputs=pe_cr)
             pe_eb.click(fn=self.pe_export_ui, inputs=[pe_ep, pe_ed], outputs=pe_er)
 
+            explore_btn.click(
+                fn=self.run_dataset_explorer,
+                outputs=[explore_status, explore_img1, explore_img2, explore_img3, explore_img4]
+            )
+
         return interface
 
-# CELL 12: Launch the Application
-ui = StableDiffusionUI()
-interface = ui.create_interface()
-interface.launch(
-    share=True,
-    server_name="0.0.0.0",
-    server_port=7860,
-    debug=True,
-    show_error=True
-)
+if __name__ == "__main__":
+    ui = StableDiffusionUI()
+    interface = ui.create_interface()
+    port = int(os.environ.get("GRADIO_SERVER_PORT", 7860))
+    try:
+        interface.launch(
+            share=True,
+            server_name="0.0.0.0",
+            server_port=port,
+            show_error=True
+        )
+    except OSError:
+        print(f"Port {port} in use, automatically selecting an open port...")
+        interface.launch(
+            share=True,
+            server_name="0.0.0.0",
+            show_error=True
+        )
+
+
 

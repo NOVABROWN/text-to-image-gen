@@ -1,7 +1,6 @@
 """
-6: Comprehensive Text-to-Image Generation Pipeline
+Multi-Model Text-to-Image Pipeline
 ==========================================================
-Requirement: Construct a comprehensive text-to-image generating pipeline that 
 includes GAN-based image generation, text preprocessing, and text embedding creation. 
 This project simulates a real-world use case while integrating all the components.
 
@@ -571,7 +570,7 @@ class BatchPipelineProcessor:
 
 if __name__ == "__main__":
     print("="*70)
-    print("TASK 6: Comprehensive Text-to-Image Generation Pipeline")
+    print("TASK Multi-Model Text-to-Image Pipeline")
     print("="*70)
     
     # Initialize pipeline

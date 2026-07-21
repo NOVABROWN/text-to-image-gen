@@ -1,8 +1,8 @@
 """
-4: Dataset Exploration
+Oxford-102 Flowers & Prompt Dataset Explorer
 Datasets:
   - Oxford-102 Flowers (torchvision) for image analysis
-  - SBU Captions (HuggingFace) for text description analysis
+  - jackyhate/text-to-image-2M (HuggingFace) for text description analysis
   - Synthetic fallback captions if HF datasets are unavailable
 Outputs:
   task4_flowers_class_dist.png  - class distribution bar chart
@@ -28,6 +28,11 @@ from collections import Counter
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 import datasets
+
+# Output directory for all Task 4 visualizations
+OUTPUT_DIR = os.path.join("outputs", "task4")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+print(f"Task 4 outputs will be saved to: {OUTPUT_DIR}/")
 
 # ============================================================
 #  PART A - Oxford-102 Flowers (Image Analysis)
@@ -102,8 +107,8 @@ try:
     ax1.tick_params(axis='x', labelsize=6)
     ax1.legend()
     plt.tight_layout()
-    fig1.savefig("task4_flowers_class_dist.png", dpi=120)
-    print("  Saved: task4_flowers_class_dist.png")
+    fig1.savefig(os.path.join(OUTPUT_DIR, "task4_flowers_class_dist.png"), dpi=120)
+    print("  Saved: outputs/task4/task4_flowers_class_dist.png")
     plt.close(fig1)
 
     # --- Figure 2: Image Gallery with Text Descriptions ---
@@ -131,9 +136,9 @@ try:
             ax.axis("off")
 
     plt.tight_layout()
-    fig2.savefig("task4_flowers_gallery.png", dpi=130, bbox_inches="tight",
-                 facecolor=fig2.get_facecolor())
-    print("  Saved: task4_flowers_gallery.png")
+    fig2.savefig(os.path.join(OUTPUT_DIR, "task4_flowers_gallery.png"), dpi=130,
+                 bbox_inches="tight", facecolor=fig2.get_facecolor())
+    print("  Saved: outputs/task4/task4_flowers_gallery.png")
     plt.close(fig2)
 
 except Exception as ex:
@@ -150,23 +155,36 @@ print("=" * 60)
 cap_lengths  = []
 captions_raw = []
 
-# Try SBU Captions on HuggingFace
+# Try jackyhate/text-to-image-2M on HuggingFace
 try:
-    print("  Trying: sbu_captions ...")
-    ds = datasets.load_dataset("sbu_captions", split="train", streaming=True)
+    print("  Trying: jackyhate/text-to-image-2M ...")
+    ds = datasets.load_dataset("jackyhate/text-to-image-2M", split="train", streaming=True)
     row_count = 0
     for row in ds:
         if row_count >= 200:
             break
-        cap = row.get("caption", "")
+        cap = ""
+        if "txt" in row:
+            cap = row["txt"]
+        elif "json" in row:
+            js = row["json"]
+            if isinstance(js, dict):
+                cap = js.get("caption", js.get("prompt", ""))
+            elif isinstance(js, str):
+                try:
+                    import json
+                    parsed = json.loads(js)
+                    cap = parsed.get("caption", parsed.get("prompt", ""))
+                except Exception:
+                    pass
         if cap:
             cap_lengths.append(len(str(cap).split()))
             captions_raw.append(str(cap))
         row_count += 1
     if captions_raw:
-        print(f"  [OK] Loaded {len(captions_raw)} captions from sbu_captions")
+        print(f"  [OK] Loaded {len(captions_raw)} captions from jackyhate/text-to-image-2M")
 except Exception as e:
-    print(f"  [SKIP] sbu_captions: {e}")
+    print(f"  [SKIP] jackyhate/text-to-image-2M: {e}")
 
 # Fallback: synthetic captions from Oxford-102 flower names
 if not captions_raw:
@@ -222,8 +240,8 @@ try:
     ax3b.set_xticks([])
 
     plt.tight_layout()
-    fig3.savefig("task4_flickr_stats.png", dpi=120)
-    print("  Saved: task4_flickr_stats.png")
+    fig3.savefig(os.path.join(OUTPUT_DIR, "task4_flickr_stats.png"), dpi=120)
+    print("  Saved: outputs/task4/task4_flickr_stats.png")
     plt.close(fig3)
 except Exception as ex:
     print(f"  [ERR] Figure 3 error: {ex}")
@@ -316,9 +334,9 @@ try:
     fig4.suptitle("Task 4 - Dataset Exploration Summary Dashboard",
                   fontsize=14, fontweight="bold", color="white", y=1.02)
     plt.tight_layout()
-    fig4.savefig("task4_dashboard.png", dpi=130, bbox_inches="tight",
+    fig4.savefig(os.path.join(OUTPUT_DIR, "task4_dashboard.png"), dpi=130, bbox_inches="tight",
                  facecolor=fig4.get_facecolor())
-    print("  Saved: task4_dashboard.png")
+    print("  Saved: outputs/task4/task4_dashboard.png")
     plt.close("all")
 
 except Exception as ex:
@@ -329,8 +347,8 @@ print()
 print("=" * 60)
 print("  DONE - All visualizations saved!")
 print("=" * 60)
-print("  task4_flowers_class_dist.png  - Class distribution bar chart")
-print("  task4_flowers_gallery.png     - Image gallery with descriptions")
-print("  task4_flickr_stats.png        - Caption length statistics")
-print("  task4_dashboard.png           - Combined summary dashboard")
+print(f"  outputs/task4/task4_flowers_class_dist.png  - Class distribution bar chart")
+print(f"  outputs/task4/task4_flowers_gallery.png     - Image gallery with descriptions")
+print(f"  outputs/task4/task4_flickr_stats.png        - Caption length statistics")
+print(f"  outputs/task4/task4_dashboard.png           - Combined summary dashboard")
 print("=" * 60)

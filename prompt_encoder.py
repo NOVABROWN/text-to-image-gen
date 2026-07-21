@@ -1,8 +1,8 @@
 """
 prompt_encoder.py  — Standalone Text Prompt Encoder Tool
 =========================================================
-Requirement 3: Create a software that uses HuggingFace Transformers to
-preprocess text descriptions into tokenized and encoded representations.
+Uses HuggingFace Transformers to
+preprocess text descriptions into tokenized representations and CLIP embedding vectors.
 The text-to-image model will use these embeddings as inputs.
 
 Features
